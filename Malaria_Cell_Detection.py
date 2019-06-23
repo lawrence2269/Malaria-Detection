@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jun 18 17:49:32 2019
@@ -10,11 +10,9 @@ Created on Tue Jun 18 17:49:32 2019
 import cv2
 import numpy as np
 import glob
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-#Visualization
-import matplotlib.pyplot as plt
+#import os
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import pickle
 
 #Model Building and Neural Network
 # Keras Imports
@@ -26,20 +24,6 @@ from keras.models import Sequential
 # Path array of infected cell images
 infected_cells=glob.glob("/Users/lawrence/Documents/Active Learning Project - 2/cell_images/Parasitized/*.png")
 uninfected_cells=glob.glob("/Users/lawrence/Documents/Active Learning Project - 2/cell_images/Uninfected/*.png")
-
-plt.figure(figsize=(15,15))
-for i in range(1,6):
-    plt.subplot(1,5,i)
-    ran=np.random.randint(100)
-    plt.imshow(cv2.imread(infected_cells[ran]))
-    plt.title('Infected cell')
-
-plt.figure(figsize=(15,15))
-for i in range(1,6):
-    plt.subplot(1,5,i)
-    ran=np.random.randint(100)
-    plt.imshow(cv2.imread(uninfected_cells[ran]))
-    plt.title('Uninfected cell')
 
 #Dataset Preparation
 dataset=[]
@@ -93,7 +77,7 @@ model.add(Dropout(0.2))
 model.add(Flatten())
 model.add(Dense(500,activation="relu"))
 model.add(Dropout(0.2))
-model.add(Dense(2,activation="softmax"))#2 represent output layer neurons 
+model.add(Dense(2,activation="softmax"))#2 represent output layer neurons
 model.summary()
 
 #model.add(Conv2D(filters=64,kernel_size=3,padding="same",activation="relu",input_shape=(224,224,3),strides=1))
@@ -125,30 +109,25 @@ model.summary()
 
 #model.summary()
 
+import gc 
+for i in range(0,1000):
+    gc.collect()
+ 
+
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-history = model.fit(x_train,y_train,batch_size=50,epochs=10,verbose=1,validation_data=(x_test, y_test))
+hist = model.fit(x_train,y_train,batch_size=50,epochs=10,verbose=1,validation_data=(x_test, y_test))
 
 
-model.save('malaria_Model.h5')
+#model.save('malaria_Model.h5')
 
-# summarize history for accuracy
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train','test'], loc='lower right')
-plt.show()
-
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train','test'], loc='upper right')
-plt.show()
+for i in range(0,1000):
+    gc.collect()
+    
+alp = hist.history
+pickle_out = open("model_metrics.pickle","wb")
+pickle.dump(alp,pickle_out)
+pickle_out.close()
 
 pred = model.predict(x_test)
 
@@ -157,13 +136,3 @@ score = round(accuracy_score(y_test.argmax(axis=1), pred.argmax(axis=1)),2)
 print(score)
 report = classification_report(y_test.argmax(axis=1), pred.argmax(axis=1))
 print(report)
-
-
-
-
-
-
-
-
-
-
